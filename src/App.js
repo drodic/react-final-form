@@ -1,4 +1,5 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
+import PropTypes from "prop-types";
 import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
 import {
   Grid,
@@ -23,13 +24,44 @@ const onSubmit = async values => {
   window.alert(JSON.stringify(values, 0, 2));
 };
 
-const FieldGroupAdapter = ({ id, label, help, input, meta, ...rest }) => (
-  <FormGroup controlId={id}>
-    <ControlLabel>{label}</ControlLabel>
-    <FormControl {...input} {...rest} />
-    {help && <HelpBlock>{help}</HelpBlock>}
-  </FormGroup>
-);
+const FieldGroupAdapter = ({ id, label, help, input, meta, type, ...rest }) => {
+  console.log(id, label, help, input, meta, type, rest);
+  return (
+    <FormGroup controlId={id}>
+      <ControlLabel>{label}</ControlLabel>
+      <FormControl {...input} {...rest} />
+      {help && <HelpBlock>{help}</HelpBlock>}
+      {meta && meta.touched && meta.error && <span>{meta.error}</span>}
+    </FormGroup>
+  );
+};
+
+FieldGroupAdapter.propTypes = {
+  id: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(["text", "number"])
+};
+
+const typesEnum = Object.freeze({
+  Text: "text",
+  Number: "number"
+});
+
+const TextGroupAdapter = ({ id, label, help, input, meta, type, ...rest }) => {
+  console.log(id, label, help, input, meta, type, rest);
+  return (
+    <FormGroup controlId={id}>
+      <ControlLabel>{label}</ControlLabel>
+      <FormControl componentClass="textarea" {...input} {...rest} />
+      {help && <HelpBlock>{help}</HelpBlock>}
+      {meta.touched && meta.error && <span>{meta.error}</span>}
+    </FormGroup>
+  );
+};
+
+TextGroupAdapter.propTypes = {
+  id: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(["textarea"]).isRequired
+};
 
 const About = () => (
   <div>
@@ -47,68 +79,74 @@ class MyForm extends Component {
 
   render() {
     return (
-      <Form
-        onSubmit={onSubmit}
-        initialValues={this.state.data}
-        render={({ handleSubmit, pristine, invalid, values }) => (
-          <form onSubmit={handleSubmit}>
-            <h3>Simple Default Input</h3>
-            <Field
-              name="firstName"
-              type="text"
-              label="First Name"
-              component={FieldGroupAdapter}
-              placeholder="First Name"
-            />
-            <Field
-              name="lastName"
-              type="text"
-              label="Last Name"
-              component={FieldGroupAdapter}
-              placeholder="Last Name"
-            />
+      <Fragment>
+        <h3>Outside Final Form</h3>
+        <FieldGroupAdapter
+          id="fName"
+          name="firstName"
+          type={typesEnum.Text}
+          label="First Name"
+          onChange={e => console.log(e.target.value)}
+        />
+        <Form
+          onSubmit={onSubmit}
+          initialValues={this.state.data}
+          render={({ handleSubmit, pristine, invalid, values }) => (
+            <form onSubmit={handleSubmit}>
+              <h3>Inside Final Form</h3>
+              <Field
+                id="fName"
+                name="firstName"
+                type="text"
+                label="First Name"
+                component={FieldGroupAdapter}
+                placeholder="First Name"
+                required={true}
+              />
+              <Field
+                id="lName"
+                name="lastName"
+                type="text"
+                label="Last Name"
+                component={FieldGroupAdapter}
+                placeholder="Last Name"
+              />
+              <Field
+                id="bio"
+                name="bio"
+                type="textarea"
+                label="Bio"
+                component={TextGroupAdapter}
+                placeholder="Bio"
+              />
+              <Field
+                id="phone"
+                name="phone"
+                type="text"
+                label="Phone"
+                component={FieldGroupAdapter}
+                placeholder="Phone"
+              />
 
-            <h3>Render Function</h3>
-            <Field
-              name="bio"
-              render={({ input, meta }) => (
-                <div className="form-group">
-                  <label>Bio</label>
-                  <FormControl componentClass="textarea" {...input} />
-                  {meta.touched && meta.error && <span>{meta.error}</span>}
-                </div>
-              )}
-            />
+              <div className="form-group">
+                <Button
+                  bsStyle="success"
+                  bsSize="lg"
+                  type="submit"
+                  disabled={pristine || invalid}
+                >
+                  Submit
+                </Button>
+                <Link to="/about" className="btn btn-lg btn-primary">
+                  About
+                </Link>
+              </div>
 
-            <h3>Render Function as Children</h3>
-            <Field name="phone">
-              {({ input, meta }) => (
-                <div className="form-group">
-                  <label>Phone</label>
-                  <FormControl type="text" {...input} placeholder="Phone" />
-                  {meta.touched && meta.error && <span>{meta.error}</span>}
-                </div>
-              )}
-            </Field>
-
-            <div className="form-group">
-              <Button
-                bsStyle="success"
-                bsSize="lg"
-                type="submit"
-                disabled={pristine || invalid}
-              >
-                Submit
-              </Button>
-              <Link to="/about" className="btn btn-lg btn-primary">
-                About
-              </Link>
-            </div>
-
-            <pre>{JSON.stringify(values, 0, 2)}</pre>
-          </form>
-        )}
-      />
+              <pre>{JSON.stringify(values, 0, 2)}</pre>
+            </form>
+          )}
+        />
+      </Fragment>
     );
   }
 }
